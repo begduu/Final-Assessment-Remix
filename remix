@@ -153,4 +153,105 @@
                 else { this.acc.mult(0); this.maxSpeed = 0.5; }
                 this.vel.add(this.acc);
                 this.vel.limit(this.maxSpeed);
-                t
+                this.pos.add(this.vel);
+                if (this.pos.x < this.bounds.x || this.pos.x > this.bounds.x + this.bounds.w) this.vel.x *= -1;
+                if (this.pos.y < this.bounds.y || this.pos.y > this.bounds.y + this.bounds.h) this.vel.y *= -1;
+            }
+            display(isFree) {
+                noStroke();
+                if (isFree) fill(random(100, 255), random(150, 255), random(200, 255), 200);
+                else fill(100, 150);
+                ellipse(this.pos.x, this.pos.y, 8, 8);
+            }
+        }
+
+        class Dave {
+            constructor() {
+                this.pos = createVector(width * 0.75, height - 100);
+                this.initialColor = color(150);
+                this.gunColor = color(255, 69, 0);
+                this.color = this.initialColor;
+                this.state = 'ready'; // 'ready' or 'animating'
+            }
+            acquireGun() { 
+                this.color = this.gunColor;
+                this.state = 'animating';
+            }
+            reset() {
+                this.color = this.initialColor;
+                this.state = 'ready';
+            }
+            display() {
+                stroke(this.color);
+                strokeWeight(4);
+                fill(30);
+                ellipse(this.pos.x, this.pos.y, 30, 30);
+            }
+        }
+
+        class GunshotParticle {
+            constructor(origin) {
+                this.pos = origin.copy();
+                this.vel = p5.Vector.random2D().mult(random(5, 15));
+                this.alpha = 255;
+            }
+            update() { this.pos.add(this.vel); this.alpha -= 15; }
+            display() {
+                noStroke();
+                fill(random(200, 255), random(100, 255), 0, this.alpha);
+                ellipse(this.pos.x, this.pos.y, random(5, 10));
+            }
+            isFaded() { return this.alpha <= 0; }
+        }
+        
+        class MockingEmoji {
+            constructor() {
+                this.pos = createVector(random(width / 2 + 20, width - 20), random(20, height - 70));
+                this.vel = p5.Vector.random2D().mult(random(0.5, 1.5));
+                this.alpha = 255;
+                this.size = random(30, 50);
+                this.emoji = random() > 0.5 ? '😂' : '👉';
+            }
+
+            update() {
+                this.pos.add(this.vel);
+                this.alpha -= 2;
+            }
+
+            display(target) {
+                push();
+                translate(this.pos.x, this.pos.y);
+                textAlign(CENTER, CENTER);
+                textSize(this.size);
+                fill(255, this.alpha);
+                if (this.emoji === '👉') {
+                    let angle = atan2(target.y - this.pos.y, target.x - this.pos.x);
+                    rotate(angle);
+                }
+                text(this.emoji, 0, 0);
+                pop();
+            }
+
+            isFaded() {
+                return this.alpha <= 0;
+            }
+        }
+
+
+        // --- Trigger Functions ---
+        function triggerGunshot(origin) {
+            for (let i = 0; i < 30; i++) {
+                gunshotParticles.push(new GunshotParticle(origin));
+            }
+        }
+        
+        function triggerMockery() {
+            for (let i = 0; i < 25; i++) {
+                mockingEmojis.push(new MockingEmoji());
+            }
+        }
+
+    </script>
+</body>
+</html>
+
