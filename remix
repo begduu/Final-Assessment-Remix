@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Illusion of Freedom</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            font-family: sans-serif;
+            color: #fff;
+        }
+        canvas {
+            display: block;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .title-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .title-overlay h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-overlay">
+        <h1>The Illusion of Freedom</h1>
+    </div>
+    <script>
+        // This sketch creates a visual diptych, remixing the essay's themes.
+        // Left side: Louise Mallard's internal, fragile freedom.
+        // Right side: Dave Saunders' external, brutal destruction.
+
+        let louiseParticles = [];
+        let dave;
+        let mockingEmojis = [];
+        let gunshotParticles = []; 
+
+        let isLouiseFree = false;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // --- Initialize Louise's side ---
+            let box = { x: 50, y: height / 2 - 150, w: width / 2 - 100, h: 300 };
+            for (let i = 0; i < 100; i++) {
+                louiseParticles.push(new Particle(
+                    random(box.x, box.x + box.w), 
+                    random(box.y, box.y + box.h),
+                    box
+                ));
+            }
+
+            // --- Initialize Dave's side ---
+            dave = new Dave();
+        }
+
+        function draw() {
+            background('#1a1a1a');
+            
+            stroke(50);
+            line(width / 2, 0, width / 2, height);
+
+            // --- Draw Louise's World (Left) ---
+            isLouiseFree = (mouseX < width / 2 && mouseX > 0);
+            noFill();
+            stroke(100);
+            rect(50, height / 2 - 150, width / 2 - 100, 300, 10);
+            for (let p of louiseParticles) {
+                p.update(isLouiseFree);
+                p.display(isLouiseFree);
+            }
+
+            // --- Draw Dave's World (Right) ---
+            noStroke();
+            fill(50, 40, 30);
+            rect(width / 2, height - 50, width / 2, 50);
+
+            dave.display();
+
+            // Update and display gunshot particles
+            for (let i = gunshotParticles.length - 1; i >= 0; i--) {
+                gunshotParticles[i].update();
+                gunshotParticles[i].display();
+                if (gunshotParticles[i].isFaded()) gunshotParticles.splice(i, 1);
+            }
+
+            // Update and display mocking emojis
+            for (let i = mockingEmojis.length - 1; i >= 0; i--) {
+                mockingEmojis[i].update();
+                mockingEmojis[i].display(dave.pos);
+                if (mockingEmojis[i].isFaded()) mockingEmojis.splice(i, 1);
+            }
+            
+            // Check if Dave's animation is finished, and if so, reset him.
+            if (dave.state === 'animating' && gunshotParticles.length === 0 && mockingEmojis.length === 0) {
+                dave.reset();
+            }
+        }
+
+        function mousePressed() {
+            if (mouseX > width / 2) {
+                // Only trigger the event if Dave is in the 'ready' state.
+                if (dave.state === 'ready') {
+                    dave.acquireGun();
+                    triggerGunshot(dave.pos); 
+                    triggerMockery();
+                }
+            }
+        }
+        
+        function windowResized() {
+            // Reset sketch on resize
+            resizeCanvas(windowWidth, windowHeight);
+            louiseParticles = [];
+            let box = { x: 50, y: height / 2 - 150, w: width / 2 - 100, h: 300 };
+            for (let i = 0; i < 100; i++) {
+                louiseParticles.push(new Particle(random(box.x, box.x + box.w), random(box.y, box.y + box.h), box));
+            }
+            dave = new Dave();
+            mockingEmojis = [];
+            gunshotParticles = [];
+        }
+
+        // --- Classes ---
+
+        class Particle { // Louise's particles
+            constructor(x, y, bounds) {
+                this.pos = createVector(x, y);
+                this.vel = createVector(random(-0.5, 0.5), random(-0.5, 0.5));
+                this.acc = createVector(0, 0);
+                this.maxSpeed = 0.5;
+                this.bounds = bounds;
+            }
+            update(isFree) {
+                if (isFree) { this.acc = p5.Vector.random2D().mult(0.2); this.maxSpeed = 4; } 
+                else { this.acc.mult(0); this.maxSpeed = 0.5; }
+                this.vel.add(this.acc);
+                this.vel.limit(this.maxSpeed);
+                t
